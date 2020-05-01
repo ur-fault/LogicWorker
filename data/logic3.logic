@@ -1,0 +1,8 @@
+or-0(
+	and-1(
+		and-0(
+			not-0(
+				input-0()),
+			input-1()),
+		not-2(
+			input-2())))

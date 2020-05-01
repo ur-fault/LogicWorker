@@ -1,0 +1,206 @@
+{
+    "type": "or",
+    "id": 2,
+    "i": [
+        {
+            "type": "or",
+            "id": 0,
+            "i": [
+                {
+                    "type": "and",
+                    "id": 2,
+                    "i": [
+                        {
+                            "type": "and",
+                            "id": 0,
+                            "i": [
+                                {
+                                    "type": "not",
+                                    "id": 0,
+                                    "i": [
+                                        {
+                                            "type": "input",
+                                            "id": 0,
+                                            "i": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "input",
+                                    "id": 1,
+                                    "i": []
+                                }
+                            ]
+                        },
+                        {
+                            "type": "and",
+                            "id": 1,
+                            "i": [
+                                {
+                                    "type": "not",
+                                    "id": 2,
+                                    "i": [
+                                        {
+                                            "type": "input",
+                                            "id": 2,
+                                            "i": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "input",
+                                    "id": 3,
+                                    "i": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "and",
+                    "id": 5,
+                    "i": [
+                        {
+                            "type": "and",
+                            "id": 3,
+                            "i": [
+                                {
+                                    "type": "not",
+                                    "id": 0,
+                                    "i": [
+                                        {
+                                            "type": "input",
+                                            "id": 0,
+                                            "i": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "input",
+                                    "id": 1,
+                                    "i": []
+                                }
+                            ]
+                        },
+                        {
+                            "type": "and",
+                            "id": 4,
+                            "i": [
+                                {
+                                    "type": "input",
+                                    "id": 2,
+                                    "i": []
+                                },
+                                {
+                                    "type": "input",
+                                    "id": 3,
+                                    "i": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "or",
+            "id": 1,
+            "i": [
+                {
+                    "type": "and",
+                    "id": 8,
+                    "i": [
+                        {
+                            "type": "and",
+                            "id": 6,
+                            "i": [
+                                {
+                                    "type": "input",
+                                    "id": 0,
+                                    "i": []
+                                },
+                                {
+                                    "type": "input",
+                                    "id": 1,
+                                    "i": []
+                                }
+                            ]
+                        },
+                        {
+                            "type": "and",
+                            "id": 7,
+                            "i": [
+                                {
+                                    "type": "not",
+                                    "id": 2,
+                                    "i": [
+                                        {
+                                            "type": "input",
+                                            "id": 2,
+                                            "i": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "not",
+                                    "id": 3,
+                                    "i": [
+                                        {
+                                            "type": "input",
+                                            "id": 3,
+                                            "i": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "and",
+                    "id": 11,
+                    "i": [
+                        {
+                            "type": "and",
+                            "id": 9,
+                            "i": [
+                                {
+                                    "type": "input",
+                                    "id": 0,
+                                    "i": []
+                                },
+                                {
+                                    "type": "input",
+                                    "id": 1,
+                                    "i": []
+                                }
+                            ]
+                        },
+                        {
+                            "type": "and",
+                            "id": 10,
+                            "i": [
+                                {
+                                    "type": "input",
+                                    "id": 2,
+                                    "i": []
+                                },
+                                {
+                                    "type": "not",
+                                    "id": 3,
+                                    "i": [
+                                        {
+                                            "type": "input",
+                                            "id": 3,
+                                            "i": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
