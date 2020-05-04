@@ -33,11 +33,12 @@ def logic(input_path: str, output_path: str, show_output, show_progress, tab_cou
 @gens.command()
 @click.argument('output-path', type=click.Path(), required=True)
 @click.argument('input-count', type=click.INT, required=True)
+@click.argument('output-count', type=click.INT, required=False)
 @click.option('--show-output/--hide-output', default=False, help='Show table output.', show_default=True)
 @click.option('--show-progress/--hide-progress', default=True, help='Show messages during generation.', show_default=True)
-def table(output_path, input_count, show_output, show_progress):
+def table(output_path, input_count, output_count, show_output, show_progress):
     rttg.print_func = click.echo
-    rttg.use(input_count, output_path, write_output=show_output, show_progress=show_progress)
+    rttg.use(input_count, output_path, write_output=show_output, show_progress=show_progress, output_count=output_count)
     
 if __name__ == '__main__':
     gens()

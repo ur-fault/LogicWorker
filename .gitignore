@@ -12,3 +12,8 @@ test.py
 setup.py
 launcher.exe
 AND_gate.svg.ico
+LogicWorker.exe.spec
+LogicGenerator.py
+t.ttbl
+LogicWorker.exe
+l.logic

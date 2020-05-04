@@ -1,3 +1,4 @@
+# launcher.py
 from os import system, path, chdir, getcwd, listdir, startfile
 import click
 
@@ -103,7 +104,7 @@ while cmd.lower() != 'exit':
         elif check_cmd(cmd, 'open'):
             open(cmd)
         else:
-            command = f' "{path.join(file_path, "main.exe")}" ' + cmd
+            command = f'"{path.join(file_path, "main.exe")}" ' + cmd
             # print(command)
             system(command)
     except KeyboardInterrupt as ki:

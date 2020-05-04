@@ -8,7 +8,7 @@ print_func = print
 print_output = True
 
 
-def generate_table(input_count):
+def generate_table(input_count, output_count):
     rows = []
     
     def run(x):
@@ -20,13 +20,13 @@ def generate_table(input_count):
                 inp.append(False)
             else:
                 inp.append(True)
-        rows.append((inp, not not getrandbits(1)))
+        rows.append(([False] + inp[1:], [not not getrandbits(1) for x in range(output_count)]))
         del(xbin)
     
     if input_count == 0:
         return []
     elif input_count == 1:
-        return [([False], not not getrandbits(1)), ([True], not not getrandbits(1))]
+        return [([False], [not not getrandbits(1) for x in range(output_count)]), ([True], [not not getrandbits(1) for x in range(output_count)])]
     bin_len = '1' + '0' * (input_count - 1)
     # print_to_console(bin_len)
     print_to_console('Preparing combinations...')
@@ -43,7 +43,10 @@ def generate_table(input_count):
     print_to_console('Preparing non-one in first position of number...')
     if print_output:
         for row in tqdm(rows):
-            next_rows.append(([True] + row[0][1:], not not getrandbits(1)))
+            next_rows.append(([True] + row[0][1:], [not not getrandbits(1) for x in range(output_count)]))
+    else:
+        for row in rows:
+            next_rows.append(([True] + row[0][1:], [not not getrandbits(1) for x in range(output_count)]))
     rows.extend(next_rows)
     del(next_rows)
 
@@ -58,17 +61,18 @@ def save_table(p, table):
     print_to_console('Preparing to save...')
     for row in tqdm(table):
         inputs_to_write = []
+        outputs_to_write = []
         for inp in row[0]:
             if inp:
                 inputs_to_write.append('1')
             else:
                 inputs_to_write.append('0')
-        if row[1]:
-            output = '1'
-        else:
-            output = '0'
-        
-        lines.append(','.join(inputs_to_write) + ' ' + output)
+        for out in row[1]:
+            if out:
+                outputs_to_write.append('1')
+            else:
+                outputs_to_write.append('0')
+        lines.append(','.join(inputs_to_write) + ' ' + ','.join(outputs_to_write))
         del(inputs_to_write)
     print_to_console('Prepared')
     print_to_console('Saving to file')
@@ -82,13 +86,13 @@ def print_to_console(msg):
         print_func(msg)
       
         
-def use(input_count, save_path, write_output=False, show_progress=True):
+def use(input_count, save_path, write_output=False, show_progress=True, output_count=1):
     global print_output
     print_output = show_progress
     
     print_to_console(f'Generating table of {input_count} inputs...')
-    table = generate_table(input_count)
-    print_to_console('Generating Done')
+    table = generate_table(input_count, output_count)
+    # print_to_console('Generating Done')
     print_to_console(f'Saving table to \'{save_path}\'...')
     table = save_table(save_path, table)
     print_to_console('Saving Done')
