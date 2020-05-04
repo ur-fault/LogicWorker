@@ -136,11 +136,11 @@ def assign_nodes_to_outputs(conditions, table, p):
                 outputs[idx2].append(condition[0])
                 
     def run2(idx):
-        last_layer.append(make_node_tree(len(outputs[idx]), 'or', outputs[idx])[-1][0])
-
-    # for x in range(len(table.o[0])):
-    #     outputs.append(Node(node_type='output', id=node_counts['output']))
-    #     node_counts['output'] += 1
+        node_tree = make_node_tree(len(outputs[idx]), 'or', outputs[idx])[-1][0]
+        output_node = Node(node_type='output', id=node_counts['output'])
+        node_counts['output'] += 1
+        output_node.i.append(node_tree)
+        last_layer.append(output_node)
         
     print_to_console('Connecting condition nodes...')
     if print_output:
@@ -159,6 +159,7 @@ def assign_nodes_to_outputs(conditions, table, p):
     else:
         for idx, _ in enumerate(outputs):
             run2(idx)
+    
     return last_layer
 
 def make_node_tree_prep(count_of_input, node_type):
@@ -405,7 +406,7 @@ def use(table_path, save_path, use_json, write_output=False, tabs=4, print_messa
     else:
         if print_output:
             with yaspin(sp, text='Preparing logic data to save...', color='green') as spinner:
-                data = str(end_nodes)
+                data = '[' + ',\n'.join([str(node) for node in end_nodes]) + ']'
                 spinner.ok('Done')
         else:
             data = str(end_nodes)
