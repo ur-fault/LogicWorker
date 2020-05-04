@@ -310,7 +310,7 @@ def print_to_console(msg):
 def save_to_file(p, data):
     if path.exists(p):
         os.remove(p)
-    os.makedirs(path.split(p)[0], exist_ok=True)
+    os.makedirs(path.realpath(path.split(p)[0]), exist_ok=True)
     with open(p, 'w') as f:
         f.write(str(data))
         

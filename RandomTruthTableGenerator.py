@@ -10,15 +10,8 @@ print_output = True
 
 def generate_table(input_count):
     rows = []
-    if input_count == 0:
-        return []
-    elif input_count == 1:
-        return [([False], not not getrandbits(1)), ([True], not not getrandbits(1))]
-    bin_len = '1' + '0' * (input_count - 1)
-    # print_to_console(bin_len)
-    print_to_console('Preparing combinations...')
-    progress_bar = tqdm(range(int(bin_len, 2), int(bin_len, 2) * 2))
-    for x in progress_bar:
+    
+    def run(x):
         xbin = f'{x:b}'
         # print_to_console(xbin)
         inp = []
@@ -29,13 +22,28 @@ def generate_table(input_count):
                 inp.append(True)
         rows.append((inp, not not getrandbits(1)))
         del(xbin)
-    del(progress_bar)
+    
+    if input_count == 0:
+        return []
+    elif input_count == 1:
+        return [([False], not not getrandbits(1)), ([True], not not getrandbits(1))]
+    bin_len = '1' + '0' * (input_count - 1)
+    # print_to_console(bin_len)
+    print_to_console('Preparing combinations...')
+    
+    if print_output:
+        for x in tqdm(range(int(bin_len, 2), int(bin_len, 2) * 2)):
+            run(x)
+    else:
+        for x in range(int(bin_len, 2), int(bin_len, 2) * 2):
+            run(x)
     # print_to_console(rows)
     print_to_console('Combinations prepared')
     next_rows = []
     print_to_console('Preparing non-one in first position of number...')
-    for row in tqdm(rows):
-        next_rows.append(([True] + row[0][1:], not not getrandbits(1)))
+    if print_output:
+        for row in tqdm(rows):
+            next_rows.append(([True] + row[0][1:], not not getrandbits(1)))
     rows.extend(next_rows)
     del(next_rows)
 

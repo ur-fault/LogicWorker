@@ -64,24 +64,24 @@ def open(cmd):
         startfile(p)
         
 def help(cmd):
-    print = click.echo
-    prints = click.secho
-    prints('Launcher for LogicWorker, only for use by user', fg='blue')
-    print('Usage: COMMAND [ARGS]')
-    print()
-    print('Commands:')
-    
-    print('\tclear: : clears console')
-    print('\tcd: DIR : navigate to directory')
-    print('\tls: DIR : list content of directory')
-    print('\treset: : navigate back to file directory')
-    print('\tworkdir: : prints current working directory')
-    print('\tlsmax: MAXCONTENTS DIR : list first MAXCONTENTS item in directory')
-    print('\topen: PATHTOFILE : open file in corresponding application')
-    print('\thelp | -h: : prints this help message and continue')
-    
-    print()
-    print('Or you can use normal LogicWorker commands')
+    # print = click.echo
+    # prints = click.secho
+    click.secho('Launcher for LogicWorker, only for use by user', fg='blue')
+    click.echo('Usage: COMMAND [ARGS]')
+    click.echo()
+    click.echo('Commands:')
+    click.echo
+    click.echo('\tclear: : clears console')
+    click.echo('\tcd: DIR : navigate to directory')
+    click.echo('\tls: DIR : list content of directory')
+    click.echo('\treset: : navigate back to file directory')
+    click.echo('\tworkdir: : prints current working directory')
+    click.echo('\tlsmax: MAXCONTENTS DIR : list first MAXCONTENTS item in directory')
+    click.echo('\topen: PATHTOFILE : open file in corresponding application')
+    click.echo('\thelp | -h: : prints this help message and continue')
+    click.echo
+    click.echo()
+    click.echo('Or you can use normal LogicWorker commands')
     
 
 while cmd.lower() != 'exit':
@@ -103,7 +103,7 @@ while cmd.lower() != 'exit':
         elif check_cmd(cmd, 'open'):
             open(cmd)
         else:
-            command = f'python "{path.join(file_path, "main.py")}" ' + cmd
+            command = f' "{path.join(file_path, "main.exe")}" ' + cmd
             # print(command)
             system(command)
     except KeyboardInterrupt as ki:

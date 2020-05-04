@@ -1,0 +1,14 @@
+useless/compile_main.bat
+builds
+build
+data
+launcher.build
+main.build
+to_build
+dist
+.vscode
+__pycache__
+test.py
+setup.py
+launcher.exe
+AND_gate.svg.ico
