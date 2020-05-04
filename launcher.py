@@ -104,7 +104,7 @@ while cmd.lower() != 'exit':
         elif check_cmd(cmd, 'open'):
             open(cmd)
         else:
-            command = f'"{path.join(file_path, "main.exe")}" ' + cmd
+            command = f'python "{path.join(file_path, "main.py")}" ' + cmd
             # print(command)
             system(command)
     except KeyboardInterrupt as ki:
