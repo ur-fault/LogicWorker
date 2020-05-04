@@ -390,7 +390,7 @@ def use(table_path, save_path, use_json, write_output=False, tabs=4, print_messa
         if print_output:
             with yaspin(sp, text='Preparing json data to save...', color='green') as spinner:
                 if tabs > 0:
-                    data = json.dumps(end_nodes.__dict__,
+                    data = json.dumps(end_nodes,
                                       default=lambda o: o.__dict__, indent=tabs)
                 else:
                     data = json.dumps(end_nodes.__dict__,
