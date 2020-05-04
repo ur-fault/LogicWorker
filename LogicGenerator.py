@@ -136,7 +136,8 @@ def assign_nodes_to_outputs(conditions, table, p):
                 outputs[idx2].append(condition[0])
                 
     def run2(idx):
-        node_tree = make_node_tree(len(outputs[idx]), 'or', outputs[idx])[-1][0]
+        node_tree = make_node_tree(len(outputs[idx]), 'or', outputs[idx])[-1]
+        print(type(node_tree))
         output_node = Node(node_type='output', id=node_counts['output'])
         node_counts['output'] += 1
         output_node.i.append(node_tree)
