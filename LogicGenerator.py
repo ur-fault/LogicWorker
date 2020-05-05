@@ -10,6 +10,8 @@ from timeit import Timer
 from tqdm import tqdm
 from yaspin import Spinner, yaspin
 
+import parsers as ps
+
 print_output = True
 print_func = print
 tab_count = 4

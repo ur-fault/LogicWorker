@@ -8,6 +8,8 @@ import pyparsing as pp
 from tqdm import tqdm
 from yaspin import Spinner, yaspin
 
+import parsers as ps
+
 all_nodes = []
 all_input_nodes = []
 all_output_nodes = []
@@ -208,58 +210,58 @@ def run_input_table(table):
     return full_table
 
 
-def read_json(p):
-    def convert_dict_to_node(_dict):
-        node = Node(node_type=_dict['type'], id=_dict['id'])
-        if node in all_nodes:
-            return all_nodes[all_nodes.index(node)]
-        all_nodes.append(node)
-        for __dict in _dict['i']:
-            node.i.append(convert_dict_to_node(__dict))
-        return node
-
-    with open(p, 'r') as f:
-        last_layer_bad_format = json.load(f)
-
-    last_layer = []
-    for _dict in last_layer_bad_format:
-        last_layer.append(convert_dict_to_node(_dict))
-
-    return last_layer
-
-
 def replace_from_list_in_str(s, l, replace_with=''):
     for item in l:
         s = s.replace(item, replace_with)
     return s
 
 
-def read_logic(p):
-    def convert_list_to_node(_list):
-        if len(_list) == 0:
-            return None
-        node = Node(node_type=_list[0].split(
-            '-')[0].replace(',', ''), id=int(_list[0].split('-')[1]))
-        if node in all_nodes:
-            return all_nodes[all_nodes.index(node)]
-        all_nodes.append(node)
-        for idx in range(0, len(_list[1]), 2):
-            node.i.append(convert_list_to_node(
-                [_list[1][idx], _list[1][idx + 1]]))
-        return node
+# def read_json(p):
+#     def convert_dict_to_node(_dict):
+#         node = Node(node_type=_dict['type'], id=_dict['id'])
+#         if node in all_nodes:
+#             return all_nodes[all_nodes.index(node)]
+#         all_nodes.append(node)
+#         for __dict in _dict['i']:
+#             node.i.append(convert_dict_to_node(__dict))
+#         return node
 
-    with open(p, 'r') as f:
-        d = '(' + replace_from_list_in_str(f.read(),
-                                           [' ', '\t', '\n', '\r', '\f', '\v'])[1:-1] + ')'
+#     with open(p, 'r') as f:
+#         last_layer_bad_format = json.load(f)
 
-    last_layer_bad_format = pp.nestedExpr(
-        opener='(', closer=')', ignoreExpr=None).parseString(d, parseAll=True).asList()[0]
-    last_layer = []
-    for idx in range(0, len(last_layer_bad_format), 2):
-        last_layer.append(convert_list_to_node(
-            [last_layer_bad_format[idx], last_layer_bad_format[idx + 1]]))
+#     last_layer = []
+#     for _dict in last_layer_bad_format:
+#         last_layer.append(convert_dict_to_node(_dict))
 
-    return last_layer
+#     return last_layer
+
+
+# def read_logic(p):
+#     def convert_list_to_node(_list):
+#         if len(_list) == 0:
+#             return None
+#         node = Node(node_type=_list[0].split(
+#             '-')[0].replace(',', ''), id=int(_list[0].split('-')[1]))
+#         if node in all_nodes:
+#             return all_nodes[all_nodes.index(node)]
+#         all_nodes.append(node)
+#         for idx in range(0, len(_list[1]), 2):
+#             node.i.append(convert_list_to_node(
+#                 [_list[1][idx], _list[1][idx + 1]]))
+#         return node
+
+#     with open(p, 'r') as f:
+#         d = '(' + replace_from_list_in_str(f.read(),
+#                                            [' ', '\t', '\n', '\r', '\f', '\v'])[1:-1] + ')'
+
+#     last_layer_bad_format = pp.nestedExpr(
+#         opener='(', closer=')', ignoreExpr=None).parseString(d, parseAll=True).asList()[0]
+#     last_layer = []
+#     for idx in range(0, len(last_layer_bad_format), 2):
+#         last_layer.append(convert_list_to_node(
+#             [last_layer_bad_format[idx], last_layer_bad_format[idx + 1]]))
+
+#     return last_layer
 
 
 def save_table(p, table):
@@ -305,8 +307,8 @@ def print_to_console(msg):
 
 
 def use(open_path, save_path, show_output=False, show_progress=True):
-    layer = read_logic(open_path) if splitext(open_path)[
-        1].lower() == '.logic' else read_json(open_path)
+    layer = ps.read_logic(open_path, Node) if splitext(open_path)[
+        1].lower() == '.logic' else ps.read_json(open_path, Node)
     find_inputs_and_outputs()
     table = make_input_table()
     full_table = run_input_table(table)
