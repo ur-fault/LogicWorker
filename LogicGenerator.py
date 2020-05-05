@@ -1,13 +1,14 @@
 # LogicGenerator.py
-from os import path, system
-import os
-from timeit import Timer
-from functools import partial
-from tqdm import tqdm
-from yaspin import yaspin, Spinner
 import json
-from sys import getsizeof
+import os
+from functools import partial
 from itertools import tee
+from os import path, system
+from sys import getsizeof
+from timeit import Timer
+
+from tqdm import tqdm
+from yaspin import Spinner, yaspin
 
 print_output = True
 print_func = print
@@ -60,8 +61,6 @@ class Table:
         self.o_copy = tee(self.o)
         self.inputs_count = len(read_first_line(p).split(' ')[0].split(','))
         self.lines_count = sum(1 for x in read_file_o(p))
-        # print_to_console(self.i)
-        # print_to_console(self.o)
         self.i_nodes = self.prep_start_nodes()
         self.trues = self.find_trues_in_output(rm_zeros=True)
         self.negatives = make_not_nodes_for_input(self)
@@ -74,7 +73,6 @@ class Table:
             nodes.append(Node(node_type='input', id=node_counts['input']))
             node_counts['input'] += 1
 
-        # print_to_console(self.i)
         print_to_console('Preparing nodes...')
         if print_output:
             for x in tqdm(range(self.inputs_count)):
@@ -104,15 +102,6 @@ class Table:
             for idx, (inp, out) in enumerate(zip(self.i, self.o)):
                 run(idx, inp, out)
 
-        # if rm_zeros:
-        #     print('Removing useless lines...')
-        #     if print_output:
-        #         for idx, out in tqdm(enumerate(self.o), total=len(self.o)):
-        #             run(idx, out)
-        #     else:
-        #         for idx, out in enumerate(self.o):
-        #             run(idx, out)
-
         return trues_lines
 
 
@@ -126,23 +115,21 @@ def add_node(node_type):
 
 
 def assign_nodes_to_outputs(conditions, table, p):
-    outputs = [[] for x in range(len(read_first_line(p).split(' ')[1].split(',')))]
-    # print('outputs len: ' + str(len(outputs)))
+    outputs = [[]
+               for x in range(len(read_first_line(p).split(' ')[1].split(',')))]
 
     def run(idx, condition):
         for idx2, out in enumerate(condition[1]):
-            # print(type(out))
             if out:
                 outputs[idx2].append(condition[0])
-                
+
     def run2(idx):
         node_tree = make_node_tree(len(outputs[idx]), 'or', outputs[idx])[-1]
-        print(type(node_tree))
         output_node = Node(node_type='output', id=node_counts['output'])
         node_counts['output'] += 1
-        output_node.i.append(node_tree)
+        output_node.i.append(node_tree[0])
         last_layer.append(output_node)
-        
+
     print_to_console('Connecting condition nodes...')
     if print_output:
         for idx, condition in tqdm(enumerate(conditions), total=len(conditions)):
@@ -150,8 +137,7 @@ def assign_nodes_to_outputs(conditions, table, p):
     else:
         for idx, condition in enumerate(conditions):
             run(idx, condition)
-            
-    # last_layer = [make_node_tree(len(outputs[idx]), 'or', outputs[idx])[-1][0] for idx, _ in enumerate(outputs)]
+
     last_layer = []
     print_to_console('Preparing each output...')
     if print_output:
@@ -160,8 +146,9 @@ def assign_nodes_to_outputs(conditions, table, p):
     else:
         for idx, _ in enumerate(outputs):
             run2(idx)
-    
+
     return last_layer
+
 
 def make_node_tree_prep(count_of_input, node_type):
     global node_counts
@@ -175,10 +162,9 @@ def make_node_tree_prep(count_of_input, node_type):
 def make_node_tree(count, node_type, prew_layer=[], prew_prew_layer=[]):
     global node_counts
     if count == 1:
-        return [prew_layer[0]]
+        return [[prew_layer[0]]]
     elif count % 2 == 0:
         nodes = int(count / 2)
-        # print_to_console(nodes)
         layers = [[]]
         for noden in range(nodes):
             node = Node(node_type=node_type, id=node_counts[node_type])
@@ -202,7 +188,6 @@ def make_node_tree(count, node_type, prew_layer=[], prew_prew_layer=[]):
             return layers
     else:
         nodes = int((count - 1) / 2)
-        # print_to_console(nodes)
         layers = [[]]
         for noden in range(nodes):
             node = Node(node_type=node_type, id=node_counts[node_type])
@@ -212,9 +197,6 @@ def make_node_tree(count, node_type, prew_layer=[], prew_prew_layer=[]):
                 node.i.append(prew_layer[noden * 2 + 1])
             layers[0].append(node)
         out_count = len(layers[0]) + 1
-        # if len(prew_layer) >= 1:
-        #     if len(prew_layer) % 2 == 1:
-        #         out_count -= 1
         if out_count <= 1:
             return layers
         else:
@@ -228,8 +210,6 @@ def make_node_tree(count, node_type, prew_layer=[], prew_prew_layer=[]):
 
 def make_condition_nodes(table: Table):
     end_nodes = []
-    # print_to_console(table.i_nodes)
-    # print_to_console(table.trues)
 
     def run(idx, combination, output):
         conditions = []
@@ -240,7 +220,6 @@ def make_condition_nodes(table: Table):
                 conditions.append(table.negatives[idx2])
         and_end_node = make_node_tree(
             len(table.trues[idx][0]), 'and', conditions)[-1][0]
-        # print(type(and_end_node))
         end_nodes.append((and_end_node, output))
 
     if print_output:
@@ -345,7 +324,6 @@ def read_file(p):
         else:
             for line in lines:
                 run(line)
-    # print_to_console(inp, out)
     print_to_console('Reading Done')
     print_to_console('Preparing table object...')
     return Table(inp, out)
@@ -364,22 +342,30 @@ def save_to_file(p, data):
         f.write(str(data))
 
 
-def use(table_path, save_path, use_json, write_output=False, tabs=4, print_messages=True):
+def use(table_path, save_path, use_json, write_output=False, tabs=4, print_messages=True, force_creation=False):
     global tab_count, print_output
     tab_count = tabs
     print_output = print_messages
-    # print(tab_count)
     print_to_console('Reading table file...')
     table = Table(table_path)
+
+    if len(table.trues) == 0:
+        if force_creation:
+            save_to_file(save_path, [])
+            print(
+                'Even if in table file there was no true output logic file was created.')
+        else:
+            print(
+                'Number of outputs that contains at least one true are zero, not creating logic.')
+        return
 
     tab_count = 1
     print_to_console('Preparing condition tables...')
     conditions = make_condition_nodes(table)
-    # table = None
     print_to_console('Preparing tree of \'or\' nodes...')
     sp = Spinner(['^-----', '-^----', '--^---', '---^--', '----^-',
                   '-----^', '----^-', '---^--', '--^---', '-^----'], 75)
-    
+
     res = assign_nodes_to_outputs(conditions, table, table_path)
     if len(res) > 0:
         end_nodes = res
@@ -394,23 +380,25 @@ def use(table_path, save_path, use_json, write_output=False, tabs=4, print_messa
                     data = json.dumps(end_nodes,
                                       default=lambda o: o.__dict__, indent=tabs)
                 else:
-                    data = json.dumps(end_nodes.__dict__,
+                    data = json.dumps(end_nodes,
                                       default=lambda o: o.__dict__)
                 spinner.ok('Done')
         else:
             if tabs > 0:
-                data = json.dumps(end_nodes.__dict__,
+                data = json.dumps(end_nodes,
                                   default=lambda o: o.__dict__, indent=tabs)
             else:
-                data = json.dumps(end_nodes.__dict__,
+                data = json.dumps(end_nodes,
                                   default=lambda o: o.__dict__)
     else:
         if print_output:
             with yaspin(sp, text='Preparing logic data to save...', color='green') as spinner:
-                data = '[' + ',\n'.join([str(node) for node in end_nodes]) + ']'
+                data = '[' + ',\n'.join([str(node)
+                                         for node in end_nodes]) + ']'
                 spinner.ok('Done')
         else:
-            data = str(end_nodes)
+            data = '[' + ',\n'.join([str(node)
+                                     for node in end_nodes]) + ']'
     end_nodes = None
     if print_output:
         with yaspin(sp, text=f'Saving to file \'{save_path}\'...', color='green') as spinner:
@@ -421,7 +409,6 @@ def use(table_path, save_path, use_json, write_output=False, tabs=4, print_messa
     print_to_console(f'File saved to \'{save_path}\'')
     if write_output:
         print(data)
-        # input('Press any key to continue...')
 
 
 def ask():
@@ -446,64 +433,3 @@ if __name__ == '__main__':
 
     res = ask()
     use(res[0], res[1], res[2], res[3])
-
-    # if answer == 'y' or answer == 'yes' or answer == '1':
-    #     write_output = True
-    # else:
-    #     write_output = False
-    # if answer2 == 'y' or answer2 == 'yes' or answer2 == '1':
-    #     use_json = True
-    # else:
-    #     use_json = False
-
-    # print_to_console('Reading table file...')
-    # table = read_file(table_path)
-
-    # tab_count = 1
-    # print_to_console('Preparing condition tables...')
-    # conditions = make_condition_nodes(table)
-    # print_to_console('Preparing tree of \'or\' nodes...')
-    # sp = Spinner(['^-----', '-^----', '--^---', '---^--', '----^-',
-    #             '-----^', '----^-', '---^--', '--^---', '-^----'], 75)
-    # if print_output:
-    #     with yaspin(sp, text='Making node tree...', color='green') as spinner:
-    #         res = make_node_tree(len(conditions), 'or', conditions)
-    #         if len(res) > 0:
-    #             if len(res[0]) > 0:
-    #                 end_node = res[-1][0]
-    #             else:
-    #                 end_node = None
-    #         else:
-    #             end_node = None
-    #         spinner.ok('Done')
-    # else:
-    #     res = make_node_tree(len(conditions), 'or', conditions)
-    #     if len(res) > 0:
-    #         if len(res[0]) > 0:
-    #             end_node = res[-1][0]
-    #         else:
-    #             end_node = None
-    #     else:
-    #         end_node = None
-
-    # if use_json:
-    #     if print_output:
-    #         with yaspin(sp, text='Preparing json data to save...', color='green') as spinner:
-    #             data = json.dumps(end_node.__dict__, default=lambda o: o.__dict__, indent=4)
-    #             spinner.ok('Done')
-    #     else:
-    #         data = json.dumps(end_node.__dict__, default=lambda o: o.__dict__, indent=4)
-    # else:
-    #     data = end_node
-
-    # if print_output:
-    #     with yaspin(sp, text=f'Saving to file \'{save_path}\'...', color='green') as spinner:
-    #         save_to_file(save_path, data)
-    #         spinner.ok('Done')
-    # else:
-    #     save_to_file(save_path, data)
-
-    # print_to_console(f'File saved to \'{save_path}\'')
-    # if write_output:
-    #     print_to_console(end_node)
-    #     input('Press any key to continue...')

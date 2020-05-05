@@ -5,6 +5,7 @@ import click
 file_path = path.split(path.realpath(__file__))[0]
 cmd = input('>>> ')
 
+# region commands
 def check_cmd(cmd, to_check):
     return cmd.lower().split(' ')[0] == to_check.lower()
 
@@ -83,6 +84,7 @@ def help(cmd):
     click.echo
     click.echo()
     click.echo('Or you can use normal LogicWorker commands')
+ # endregion
     
 
 while cmd.lower() != 'exit':
