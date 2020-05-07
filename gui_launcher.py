@@ -470,13 +470,7 @@ class RTTG_form(DarkForms.DarkForm):
     # region init
     def __init__(self, parent_form):
         self.main_form = parent_form
-        self.open_path = ''
         self.save_path = ''
-        self.enable_tabs = False
-        self.tabs_count = 4
-        
-        self.open_file_dialog = WinForms.OpenFileDialog()
-        self.save_file_dialog = WinForms.SaveFileDialog()
         
         self.saving = False
         self.running = False
@@ -487,21 +481,13 @@ class RTTG_form(DarkForms.DarkForm):
         
     def InitDialogs(self):
         # Create dialogs
-        self.open_file_dialog = WinForms.OpenFileDialog()
         self.save_file_dialog = WinForms.SaveFileDialog()
         
         # Set properities for dialogs
-        self.open_file_dialog.AddExtension = True
-        self.open_file_dialog.InitialDirectory = home_dir
-        self.open_file_dialog.DefaultExt = 'ttbl'
-        self.open_file_dialog.Filter = 'Truth table files (*.ttbl)|*.ttbl'
-        self.open_file_dialog.CheckFileExists = True
-        self.open_file_dialog.CheckPathExists = True
-        self.open_file_dialog.RestoreDirectory = True
         
         self.save_file_dialog.InitialDirectory = home_dir
-        self.save_file_dialog.DefaultExt = 'logic'
-        self.save_file_dialog.Filter = 'Logic circuit files (*.logic)|*.logic|Json logic files (*.json)|*.json'
+        self.save_file_dialog.DefaultExt = 'ttbl'
+        self.save_file_dialog.Filter = 'Truth Table Files (*.ttbl)|*.ttbl'
         self.save_file_dialog.RestoreDirectory = True
         self.save_file_dialog.CheckPathExists = True
 
@@ -547,18 +533,18 @@ class RTTG_form(DarkForms.DarkForm):
         self.input_count_numupdown.Size = Size(100, 12)
         self.input_count_numupdown.Location = Point(15, 56 - 15)
         self.input_count_numupdown.Font = self.entry_font
-        self.input_count_numupdown.Enabled = False
+        # self.input_count_numupdown.Enabled = False
         self.input_count_numupdown.Value = Decimal(4)
         self.input_count_numupdown.Minimum = Decimal(1)
-        self.input_count_numupdown.ValueChanged += self.tab_numeric_value_changed
+        self.input_count_numupdown.ValueChanged += self.input_count_numupdown_value_changed
         
         self.output_count_numupdown.Size = Size(100, 12)
         self.output_count_numupdown.Location = Point(240, 56 - 15)
         self.output_count_numupdown.Font = self.entry_font
-        self.output_count_numupdown.Enabled = False
+        # self.output_count_numupdown.Enabled = False
         self.output_count_numupdown.Value = Decimal(1)
         self.output_count_numupdown.Minimum = Decimal(1)
-        self.output_count_numupdown.ValueChanged += self.tab_numeric_value_changed
+        self.output_count_numupdown.ValueChanged += self.output_count_numupdown_value_changed
         
         #       Checkboxes
         
@@ -621,11 +607,18 @@ class RTTG_form(DarkForms.DarkForm):
         self.running = True
         print('Running command')
         
-        lg.print_output = True
-        lg.tab_count = self.tabs_count
         
         try:
             progress.Value = 1
+            self.task_label.Text = 'Generating Table'
+            rttg.print_output = True
+            table = rttg.generate_table(Decimal.ToInt32(self.input_count_numupdown.Value), Decimal.ToInt32(self.output_count_numupdown.Value))
+            progress.Value += 1
+            self.task_label.Text = 'Saving'
+            rttg.save_table(self.save_path, table)
+            progress.Value += 1
+            self.task_label.Text = 'Saved'
+            progress.Hide()
         except MemoryError as me:
             progress.Value = 0
             progress.Hide()
@@ -639,14 +632,13 @@ class RTTG_form(DarkForms.DarkForm):
     # Components's events
     # region events
     def run_button_click(self, sender, args):
-        if len(self.open_path) > 0 and len(self.save_path):
-            self.open_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+        if len(self.save_path) > 0:
             self.save_path_entry.BackColor = Color.FromArgb(69, 73, 74)
             
             self.progress = ProgressBar()
             self.progress.Size = Size(435, 25)
             self.progress.Location = Point(15, 192 - 25 - 5)
-            self.progress.Maximum = 5
+            self.progress.Maximum = 3
             self.progress.BackColor = Color.FromArgb(69, 73, 74)
             self.Controls.Add(self.progress)
             
@@ -655,23 +647,14 @@ class RTTG_form(DarkForms.DarkForm):
             
             self.t = threading.Thread(target=self.run_command, args=(self.progress,))
             self.t.start()
-        elif len(self.open_path) <= 0 and len(self.save_path) <= 0:
-            self.open_path_entry.BackColor = Color.Red
+        else:
             self.save_path_entry.BackColor = Color.Red
-        elif len(self.open_path) <= 0:
-            self.open_path_entry.BackColor = Color.Red
-            self.save_path_entry.BackColor = Color.FromArgb(69, 73, 74)
-        elif len(self.save_path) <= 0:
-            self.save_path_entry.BackColor = Color.Red
-            self.open_path_entry.BackColor = Color.FromArgb(69, 73, 74)
                 
     
     def save_path_button_click(self, sender, args):
         if self.save_file_dialog.ShowDialog() == WinForms.DialogResult.OK:
             try:
                 self.save_path = self.save_file_dialog.FileName
-                self.enable_tabs = False if path.splitext(self.save_path)[1] == '.logic' else True
-                self.json_indent_numupdown.Enabled = self.enable_tabs
                 self.save_path_entry.Text = self.save_path
             except SecurityException as se:
                 WinForms.MessageBox.Show(f'Security error.\n\nError message: {se.Message}\n\nDetails:\n\n{se.StackTrace}')
@@ -694,9 +677,13 @@ class RTTG_form(DarkForms.DarkForm):
         mform.SetDesktopLocation(position.X, position.Y)
                 
     
-    def tab_numeric_value_changed(self, sender, args):
-        self.tabs_count = self.json_indent_numupdown.Value
-        print('Indent value changed to ' + str(self.tabs_count))
+    def input_count_numupdown_value_changed(self, sender, args):
+        # self.tabs_count = self.json_indent_numupdown.Value
+        print('Input value changed to ' + str(self.input_count_numupdown))
+        
+    def output_count_numupdown_value_changed(self, sender, args):
+        # self.tabs_count = self.json_indent_numupdown.Value
+        print('Output value changed to ' + str(self.output_count_numupdown))
     # endregion
 
 
