@@ -361,7 +361,7 @@ def use(table_path, save_path, use_json, write_output=False, tabs=4, print_messa
                 'Number of outputs that contains at least one true are zero, not creating logic.')
         return
 
-    tab_count = 1
+    # tab_count = 1
     print_to_console('Preparing condition tables...')
     conditions = make_condition_nodes(table)
     print_to_console('Preparing tree of \'or\' nodes...')

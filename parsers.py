@@ -4,6 +4,7 @@ import json
 from os import path
 import os
 
+
 # region read files
 
 
@@ -40,7 +41,7 @@ def read_logic(p, cls):
         last_layer.append(convert_list_to_node(
             [last_layer_bad_format[idx], last_layer_bad_format[idx + 1]]))
 
-    return last_layer
+    return (last_layer, all_nodes)
 
 
 def read_json(p, cls):
@@ -63,7 +64,7 @@ def read_json(p, cls):
     for _dict in last_layer_bad_format:
         last_layer.append(convert_dict_to_node(_dict))
 
-    return last_layer
+    return (last_layer, all_nodes)
 # endregion
 # region write files
 

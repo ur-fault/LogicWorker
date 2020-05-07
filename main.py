@@ -18,7 +18,7 @@ def gens():
 @click.option('--tab-count', '-t', default=4, help='Count of tabs used in json file.', show_default=True)
 @click.option('--show-output/--hide-output', default=False, help='Show logic output.', show_default=True)
 @click.option('--show-progress/--hide-progress', default=True, help='Show messages during generation.', show_default=True)
-@click.option('--force-file-creation/--do-not-create-empty', default=False, help='LogicGenerator will create logic file even if in table file there was no true outputs.', show_default=True)
+@click.option('--force-file-creation/--do-not-create-empty', default=False, help='LogicGenerator will create logic file even if in table file was no true outputs.', show_default=True)
 def fromtabletologic(input_path: str, output_path: str, show_output, show_progress, tab_count, force_file_creation):
     lg.print_func = click.echo
     if splitext(output_path)[1].lower() == '.logic':

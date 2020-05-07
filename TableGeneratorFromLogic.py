@@ -259,7 +259,8 @@ def print_to_console(msg):
 
 
 def use(open_path, save_path, show_output=False, show_progress=True):
-    layer = ps.read_logic(open_path, Node) if splitext(open_path)[
+    global all_nodes
+    layer, all_nodes = ps.read_logic(open_path, Node) if splitext(open_path)[
         1].lower() == '.logic' else ps.read_json(open_path, Node)
     find_inputs_and_outputs()
     table = make_input_table()
