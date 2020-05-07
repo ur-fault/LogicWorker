@@ -374,7 +374,7 @@ class LG_form(DarkForms.DarkForm):
             progress.Value += 1
             self.task_label.Text = 'Saving'
             if self.enable_tabs:
-                parsers.save_json(self.save_path, end_nodes, self.tabs_count)
+                parsers.save_json(self.save_path, end_nodes, int(Decimal.ToInt32(self.tabs_count)))
             else:
                 parsers.save_logic(self.save_path, end_nodes)
             
