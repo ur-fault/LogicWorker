@@ -20,7 +20,7 @@ from System.Drawing import (
     Font,
     FontStyle,
     FontFamily,
-    
+    ContentAlignment
 )
 
 import LogicGenerator as lg
@@ -29,7 +29,7 @@ import TableGeneratorFromLogic as tgfl
 import parsers
 
 from os import path as path
-import multiprocessing
+import threading
 
 
 # from watermark_textbox import WaterMarkDarkTextBox
@@ -160,6 +160,7 @@ class LG_form(DarkForms.DarkForm):
         self.open_file_dialog = WinForms.OpenFileDialog()
         self.save_file_dialog = WinForms.SaveFileDialog()
         
+        self.saving = False
         self.running = False
         self.t = None
 
@@ -219,6 +220,7 @@ class LG_form(DarkForms.DarkForm):
         self.force_creation_label = DarkLabel()
         self.json_indent_label = DarkLabel()
         self.horizontal_divider_indent_force_label = DarkLabel()
+        self.task_label = DarkLabel()
         
         self.open_path_entry = DarkTextBox()
         self.save_path_entry = DarkTextBox()
@@ -258,6 +260,13 @@ class LG_form(DarkForms.DarkForm):
         self.horizontal_divider_indent_force_label.Size = Size(480, 2)
         self.horizontal_divider_indent_force_label.Location = Point(0, 124 - 15)
         self.horizontal_divider_indent_force_label.BorderStyle = WinForms.FormBorderStyle.FixedSingle
+        
+        self.task_label.Size = Size(170 + 15, 25)
+        self.task_label.Location = Point(155 - 15, 195)
+        self.task_label.Font = self.font
+        self.task_label.TextAlign = ContentAlignment.MiddleCenter
+        self.task_label.Text = ''
+        self.task_label.BorderStyle = WinForms.FormBorderStyle.FixedSingle
         
         #       TextBoxes
         self.open_path_entry.Size = Size(300, 12)
@@ -312,6 +321,7 @@ class LG_form(DarkForms.DarkForm):
             
             self.force_creation_label,
             self.json_indent_label,
+            self.task_label,
             
             self.open_path_entry,
             self.save_path_entry,
@@ -332,35 +342,65 @@ class LG_form(DarkForms.DarkForm):
         lg.tab_count = self.tabs_count
         
         progress.Value += 1
+        self.task_label.Text = 'Generating table'
         table = lg.Table(self.open_path)
         progress.Value += 1
+        self.task_label.Text = 'Generating conditions'
         conditions = lg.make_condition_nodes(table)
         progress.Value += 1
+        self.task_label.Text = 'Assigning nodes'
         res = lg.assign_nodes_to_outputs(conditions, table, self.open_path)
+        table = None
+        conditions = None
         if len(res) > 0:
             end_nodes = res
         else:
             end_nodes = None
+        res = None
         progress.Value += 1
+        self.task_label.Text = 'Saving'
         if self.enable_tabs:
             parsers.save_json(self.save_path, end_nodes, self.tabs_count)
         else:
             parsers.save_logic(self.save_path, end_nodes)
         progress.Value += 1
+        self.task_label.Text = 'Saved'
         progress.Hide()
+        
+        self.back_button.Enabled = True
+        self.run_button.Enabled = True
+        
         self.running = False
         
     # Components's events
     # region events
     def run_button_click(self, sender, args):
-        self.progress = ProgressBar()
-        self.progress.Size = Size(435, 25)
-        self.progress.Location = Point(15, 192 - 25 - 5)
-        self.progress.Maximum = 5
-        self.Controls.Add(self.progress)
-        
-        self.t = multiprocessing.Process(target=self.run_command, args=(self.progress,))
-        self.t.start()
+        if len(self.open_path) > 0 and len(self.save_path):
+            self.open_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+            self.save_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+            
+            self.progress = ProgressBar()
+            self.progress.Size = Size(435, 25)
+            self.progress.Location = Point(15, 192 - 25 - 5)
+            self.progress.Maximum = 5
+            self.progress.BackColor = Color.FromArgb(69, 73, 74)
+            self.Controls.Add(self.progress)
+            
+            self.back_button.Enabled = False
+            self.run_button.Enabled = False
+            
+            self.t = threading.Thread(target=self.run_command, args=(self.progress,))
+            self.t.start()
+        elif len(self.open_path) <= 0 and len(self.save_path) <= 0:
+            self.open_path_entry.BackColor = Color.Red
+            self.save_path_entry.BackColor = Color.Red
+        elif len(self.open_path) <= 0:
+            self.open_path_entry.BackColor = Color.Red
+            self.save_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+        elif len(self.save_path) <= 0:
+            self.save_path_entry.BackColor = Color.Red
+            self.open_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+            
     
     def open_path_button_click(self, sender, args):
         if self.open_file_dialog.ShowDialog() == WinForms.DialogResult.OK:
