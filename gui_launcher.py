@@ -521,6 +521,10 @@ class RTTG_form(DarkForms.DarkForm):
         self.output_count_numupdown = DarkNumericUpDown()
         
         self.task_label = DarkLabel()
+        self.input_label = DarkLabel()
+        self.output_label = DarkLabel()
+        self.input_label_border = DarkLabel()
+        self.output_label_border = DarkLabel()
         
         self.save_path_entry = DarkTextBox()
         
@@ -533,15 +537,13 @@ class RTTG_form(DarkForms.DarkForm):
         self.input_count_numupdown.Size = Size(100, 12)
         self.input_count_numupdown.Location = Point(15, 56 - 15)
         self.input_count_numupdown.Font = self.entry_font
-        # self.input_count_numupdown.Enabled = False
         self.input_count_numupdown.Value = Decimal(4)
         self.input_count_numupdown.Minimum = Decimal(1)
         self.input_count_numupdown.ValueChanged += self.input_count_numupdown_value_changed
         
         self.output_count_numupdown.Size = Size(100, 12)
-        self.output_count_numupdown.Location = Point(240, 56 - 15)
+        self.output_count_numupdown.Location = Point(15, 90 - 15)
         self.output_count_numupdown.Font = self.entry_font
-        # self.output_count_numupdown.Enabled = False
         self.output_count_numupdown.Value = Decimal(1)
         self.output_count_numupdown.Minimum = Decimal(1)
         self.output_count_numupdown.ValueChanged += self.output_count_numupdown_value_changed
@@ -555,6 +557,26 @@ class RTTG_form(DarkForms.DarkForm):
         self.task_label.TextAlign = ContentAlignment.MiddleCenter
         self.task_label.Text = ''
         self.task_label.BorderStyle = WinForms.FormBorderStyle.FixedSingle
+        
+        self.input_label.Size = Size(300, 21)
+        self.input_label.Location = Point(115, 56 - 15 + 3)
+        self.input_label.Font = self.entry_font
+        self.input_label.Text = ' Count of Inputs'
+        
+        self.input_label_border.Size = Size(335, 25)
+        self.input_label_border.Location = Point(115, 56 - 15)
+        self.input_label_border.Font = self.entry_font
+        self.input_label_border.BorderStyle = WinForms.FormBorderStyle.FixedSingle
+        
+        self.output_label.Size = Size(300, 21)
+        self.output_label.Location = Point(115, 90 - 15 + 3)
+        self.output_label.Font = self.entry_font
+        self.output_label.Text = ' Count of Outputs'
+        
+        self.output_label_border.Size = Size(335, 25)
+        self.output_label_border.Location = Point(115, 90 - 15)
+        self.output_label_border.Font = self.entry_font
+        self.output_label_border.BorderStyle = WinForms.FormBorderStyle.FixedSingle
         
         #       TextBoxes
         self.save_path_entry.Size = Size(300, 12)
@@ -594,6 +616,10 @@ class RTTG_form(DarkForms.DarkForm):
             self.output_count_numupdown,
             
             self.task_label,
+            self.input_label,
+            self.output_label,
+            self.input_label_border,
+            self.output_label_border,
             
             self.save_path_entry,
             
@@ -606,21 +632,21 @@ class RTTG_form(DarkForms.DarkForm):
     def run_command(self, progress):
         self.running = True
         print('Running command')
-        
-        
         try:
             progress.Value = 1
             self.task_label.Text = 'Generating Table'
             rttg.print_output = True
             table = rttg.generate_table(Decimal.ToInt32(self.input_count_numupdown.Value), Decimal.ToInt32(self.output_count_numupdown.Value))
             progress.Value += 1
+            
             self.task_label.Text = 'Saving'
             rttg.save_table(self.save_path, table)
             progress.Value += 1
+            
             self.task_label.Text = 'Saved'
             progress.Hide()
         except MemoryError as me:
-            progress.Value = 0
+            progress.Value = 1
             progress.Hide()
             self.task_label.Text = 'MemoryError'
         
@@ -678,12 +704,10 @@ class RTTG_form(DarkForms.DarkForm):
                 
     
     def input_count_numupdown_value_changed(self, sender, args):
-        # self.tabs_count = self.json_indent_numupdown.Value
-        print('Input value changed to ' + str(self.input_count_numupdown))
+        print('Input value changed to ' + str(self.input_count_numupdown.Value))
         
     def output_count_numupdown_value_changed(self, sender, args):
-        # self.tabs_count = self.json_indent_numupdown.Value
-        print('Output value changed to ' + str(self.output_count_numupdown))
+        print('Output value changed to ' + str(self.output_count_numupdown.Value))
     # endregion
 
 
