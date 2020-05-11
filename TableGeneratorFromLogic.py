@@ -169,6 +169,7 @@ def layer_of_nodes_to_str(layer):
 
 
 def find_inputs_and_outputs():
+    print(all_nodes)
     for node in all_nodes:
         if node.type == 'input':
             all_input_nodes.append(node)
@@ -188,6 +189,7 @@ def make_input_table(number=-1):
     for x in range(int(bin_len, 2), int(bin_len, 2) * 2):
         row = []
         rows.append(row)
+        # print(x)
         nbin = f'{x:b}'[1:]
         for ch in nbin:
             if ch == '0':
@@ -199,7 +201,7 @@ def make_input_table(number=-1):
 
 def run_input_table(table):
     full_table = []
-    print(table)
+    # print(table)
     for row in table:
         for idx, inp in enumerate(all_input_nodes):
             inp.set_state(row[idx])
@@ -230,8 +232,7 @@ def save_table(p, table):
                 outputs_to_write.append('1')
             else:
                 outputs_to_write.append('0')
-        lines.append(','.join(inputs_to_write) +
-                     ' ' + ','.join(outputs_to_write))
+        lines.append(','.join(inputs_to_write) + ' ' + ','.join(outputs_to_write))
         del inputs_to_write
 
     if path.exists(p):
@@ -240,6 +241,7 @@ def save_table(p, table):
     lines = []
     os.makedirs(path.realpath(path.split(p)[0]), exist_ok=True)
     print_to_console('Preparing to save...')
+    # print(table)
     if print_output:
         for row in tqdm(table):
             run(row)
@@ -250,6 +252,7 @@ def save_table(p, table):
     print_to_console('Saving to file ' + p)
     with open(p, 'w') as f:
         f.write('\n'.join(lines))
+    print('Saved')
     return lines
 
 

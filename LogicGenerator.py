@@ -37,10 +37,10 @@ class Node:
             if len(self.i) <= 0:
                 text = f'{self.type}-{str(self.id)}()'
             elif len(self.i) == 2:
-                text = f'{self.type}-{str(self.id)}(\n' + '\t' * ((c + 1) * tab_count) + f'{self.i[0].__repr__(print_other=True, c=c+1)},\n' + '\t' * (
+                text = f'{self.type}-{str(self.id)}(\n' + ' ' * ((c + 1) * tab_count) + f'{self.i[0].__repr__(print_other=True, c=c+1)},\n' + ' ' * (
                     (c + 1) * tab_count) + f'{self.i[1].__repr__(print_other=True, c=c+1)})'
             elif len(self.i) == 1:
-                text = f'{self.type}-{str(self.id)}(\n' + '\t' * (
+                text = f'{self.type}-{str(self.id)}(\n' + ' ' * (
                     (c + 1) * tab_count) + f'{self.i[0].__repr__(print_other=True, c=c+1)})'
             else:
                 raise Exception('Test error')

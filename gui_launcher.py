@@ -12,7 +12,12 @@ from System.Windows.Forms import ProgressBar
 from System.Windows.Media import Brushes
 from System.Security import SecurityException
 from System import Decimal
-from System.Threading import Thread, ThreadStart, ApartmentState, ParameterizedThreadStart
+from System.Threading import (
+    Thread,
+    ThreadStart,
+    ApartmentState,
+    ParameterizedThreadStart
+)
 from System.Drawing import (
     Size,
     Point,
@@ -30,10 +35,38 @@ import parsers
 
 from os import path as path
 import threading
+import ctypes
 
 
 # from watermark_textbox import WaterMarkDarkTextBox
 home_dir = path.expanduser('~/Documents')
+
+
+NULL = 0
+
+def ctype_async_raise(thread_obj, exception):
+    found = False
+    target_tid = 0
+    for tid, tobj in threading._active.items():
+        if tobj is thread_obj:
+            found = True
+            target_tid = tid
+            break
+
+    if not found:
+        raise ValueError("Invalid thread object")
+
+    ret = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(target_tid), ctypes.py_object(exception))
+    # ref: http://docs.python.org/c-api/init.html#PyThreadState_SetAsyncExc
+    if ret == 0:
+        raise ValueError("Invalid thread ID")
+    elif ret > 1:
+        # Huh? Why would we notify more than one threads?
+        # Because we punch a hole into C level interpreter.
+        # So it is better to clean up the mess.
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(target_tid, NULL)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+    print ("Successfully set asynchronized exception for", target_tid)
 
 
 def set_all_components(form, comps):
@@ -143,7 +176,6 @@ class main_form(DarkForms.DarkForm):
 
     def run_rttg(self, sender, args):
         print('Pressed rttg')
-        print('Pressed lg')
         position = self.Location
         self.Hide()
         rttg_form = RTTG_form(self)
@@ -153,6 +185,12 @@ class main_form(DarkForms.DarkForm):
 
     def run_tgfl(self, sender, args):
         print('Pressed tgfl')
+        position = self.Location
+        self.Hide()
+        tgfl_form = TGFL_form(self)
+        tgfl_form.FormClosed += lambda sender, args: self.Close()
+        tgfl_form.Show()
+        tgfl_form.SetDesktopLocation(position.X, position.Y)
 
 
 class LG_form(DarkForms.DarkForm):
@@ -374,7 +412,7 @@ class LG_form(DarkForms.DarkForm):
             progress.Value += 1
             self.task_label.Text = 'Saving'
             if self.enable_tabs:
-                parsers.save_json(self.save_path, end_nodes, int(Decimal.ToInt32(self.tabs_count)))
+                parsers.save_json(self.save_path, end_nodes, self.tabs_count)
             else:
                 parsers.save_logic(self.save_path, end_nodes)
             
@@ -388,6 +426,12 @@ class LG_form(DarkForms.DarkForm):
         
         self.back_button.Enabled = True
         self.run_button.Enabled = True
+        self.open_path_button.Enabled = True
+        self.save_path_button.Enabled = True
+        
+        self.json_indent_numupdown.Enabled = True
+        
+        self.force_creation_checkbox.Enabled = True
         
         self.running = False
         
@@ -405,11 +449,18 @@ class LG_form(DarkForms.DarkForm):
             self.progress.BackColor = Color.FromArgb(69, 73, 74)
             self.Controls.Add(self.progress)
             
-            self.back_button.Enabled = False
+            # self.back_button.Enabled = False
             self.run_button.Enabled = False
+            self.open_path_button.Enabled = False
+            self.save_path_button.Enabled = False
+            
+            self.json_indent_numupdown.Enabled = False
+            
+            self.force_creation_checkbox.Enabled = False
             
             self.t = threading.Thread(target=self.run_command, args=(self.progress,))
             self.t.start()
+            
         elif len(self.open_path) <= 0 and len(self.save_path) <= 0:
             self.open_path_entry.BackColor = Color.Red
             self.save_path_entry.BackColor = Color.Red
@@ -443,11 +494,12 @@ class LG_form(DarkForms.DarkForm):
                 
     def back_button_click(self, sender, args):
         if self.running:
-            self.t.terminate()
+            ctype_async_raise(self.t, MemoryError)
             self.progress.Hide()
             self.progress = None
             self.running = False
             self.t = None
+            return
             
         print('Pressed back')
         position = self.Location
@@ -459,13 +511,12 @@ class LG_form(DarkForms.DarkForm):
                 
     
     def tab_numeric_value_changed(self, sender, args):
-        self.tabs_count = self.json_indent_numupdown.Value
+        self.tabs_count = Decimal.ToInt32(self.json_indent_numupdown.Value)
+        print(type(self.tabs_count))
         print('Indent value changed to ' + str(self.tabs_count))
     # endregion
     
     
-
-
 class RTTG_form(DarkForms.DarkForm):
     # region init
     def __init__(self, parent_form):
@@ -652,6 +703,10 @@ class RTTG_form(DarkForms.DarkForm):
         
         self.back_button.Enabled = True
         self.run_button.Enabled = True
+        self.save_path_button.Enabled = True
+        
+        self.input_count_numupdown.Enabled = True
+        self.output_count_numupdown.Enabled = True
         
         self.running = False
         
@@ -668,8 +723,12 @@ class RTTG_form(DarkForms.DarkForm):
             self.progress.BackColor = Color.FromArgb(69, 73, 74)
             self.Controls.Add(self.progress)
             
-            self.back_button.Enabled = False
+            # self.back_button.Enabled = False
             self.run_button.Enabled = False
+            self.save_path_button.Enabled = False
+            
+            self.input_count_numupdown.Enabled = False
+            self.output_count_numupdown.Enabled = False
             
             self.t = threading.Thread(target=self.run_command, args=(self.progress,))
             self.t.start()
@@ -688,11 +747,12 @@ class RTTG_form(DarkForms.DarkForm):
                 
     def back_button_click(self, sender, args):
         if self.running:
-            self.t.terminate()
+            ctype_async_raise(self.t, MemoryError)
             self.progress.Hide()
             self.progress = None
             self.running = False
             self.t = None
+            return
             
         print('Pressed back')
         position = self.Location
@@ -710,6 +770,264 @@ class RTTG_form(DarkForms.DarkForm):
         print('Output value changed to ' + str(self.output_count_numupdown.Value))
     # endregion
 
+
+class TGFL_form(DarkForms.DarkForm):
+    # region init
+    def __init__(self, parent_form):
+        self.main_form = parent_form
+        self.open_path = ''
+        self.save_path = ''
+        
+        self.open_file_dialog = WinForms.OpenFileDialog()
+        self.save_file_dialog = WinForms.SaveFileDialog()
+        
+        self.saving = False
+        self.running = False
+        self.use_json = False
+        self.t = None
+
+        self.InitDialogs()
+        self.InitComponents()
+        
+    def InitDialogs(self):
+        # Create dialogs
+        self.open_file_dialog = WinForms.OpenFileDialog()
+        self.save_file_dialog = WinForms.SaveFileDialog()
+        
+        # Set properities for dialogs
+        self.open_file_dialog.AddExtension = True
+        self.open_file_dialog.InitialDirectory = home_dir
+        self.open_file_dialog.DefaultExt = 'logic'
+        self.open_file_dialog.Filter = 'Logic files (*.logic)|*.logic|Json logic files (*.json)|*.json'
+        self.open_file_dialog.CheckFileExists = True
+        self.open_file_dialog.CheckPathExists = True
+        self.open_file_dialog.RestoreDirectory = True
+        
+        self.save_file_dialog.InitialDirectory = home_dir
+        self.save_file_dialog.DefaultExt = 'ttbl'
+        self.save_file_dialog.Filter = 'Truth table files (*.ttbl)|*.ttbl'
+        self.save_file_dialog.RestoreDirectory = True
+        self.save_file_dialog.CheckPathExists = True
+
+    def InitComponents(self):
+        # LG form's main settings
+        self.width = 480
+        self.height = 240
+
+        self.Text = 'LogicWorker - Table generator from logic'
+        self.Name = 'TGFL_form'
+        h = WinForms.SystemInformation.CaptionHeight
+        self.ClientSize = Size(self.width, self.height)
+        self.MinimumSize = Size(self.width, self.height + h)
+        self.MaximumSize = Size(self.width, self.height + h)
+        self.FormBorderStyle = WinForms.FormBorderStyle.FixedSingle
+        self.MaximizeBox = False
+
+        # Some properities
+        self.font_family = FontFamily('Consolas')
+        self.font = Font(
+            self.font_family, 25.0 - 15.0, FontStyle.Regular)
+        self.button_font = Font(
+            self.font_family, 25.0 - 15.0, FontStyle.Regular)
+        self.entry_font = Font(
+            self.font_family, 25.0 - 14.0, FontStyle.Bold)
+        self.run_button_font = Font(
+            self.font_family, 25.0 - 13.0, FontStyle.Bold)
+        
+        # Define components
+        self.task_label = DarkLabel()
+        
+        self.open_path_entry = DarkTextBox()
+        self.save_path_entry = DarkTextBox()
+        
+        self.open_path_button = DarkButton()
+        self.save_path_button = DarkButton()
+        self.back_button = DarkButton()
+        self.run_button = DarkButton()
+
+        # Define components's settings
+        #       NumericUpDown
+        
+        #       Checkboxes
+        
+        #       Labels
+        self.task_label.Size = Size(170 + 15, 25)
+        self.task_label.Location = Point(155 - 15, 195)
+        self.task_label.Font = self.font
+        self.task_label.TextAlign = ContentAlignment.MiddleCenter
+        self.task_label.Text = ''
+        self.task_label.BorderStyle = WinForms.FormBorderStyle.FixedSingle
+        
+        #       TextBoxes
+        self.open_path_entry.Size = Size(300, 12)
+        self.open_path_entry.Location = Point(15, 20 - 15)
+        self.open_path_entry.Font = self.entry_font
+        self.open_path_entry.ReadOnly = True
+        self.open_path_entry.Text = 'Choose input file'
+        
+        self.save_path_entry.Size = Size(300, 12)
+        self.save_path_entry.Location = Point(15, 56 - 15)
+        self.save_path_entry.Font = self.entry_font
+        self.save_path_entry.ReadOnly = True
+        self.save_path_entry.Text = 'Choose output file'
+        
+        
+        #       Buttons
+        self.open_path_button.Size = Size(125, 25)
+        self.open_path_button.Location = Point(325, 20 - 15)
+        self.open_path_button.Font = self.button_font
+        self.open_path_button.Text = 'Choose file'
+        self.open_path_button.Click += self.open_path_button_click
+        
+        self.save_path_button.Size = Size(125, 25)
+        self.save_path_button.Location = Point(325, 56 - 15)
+        self.save_path_button.Font = self.button_font
+        self.save_path_button.Text = 'Choose file'
+        self.save_path_button.Click += self.save_path_button_click
+        
+        self.back_button.Size = Size(125, 25)
+        self.back_button.Location = Point(15, 195)
+        self.back_button.Font = self.button_font
+        self.back_button.Text = 'Back'
+        self.back_button.Click += self.back_button_click
+        
+        self.run_button.Size = Size(125, 25)
+        self.run_button.Location = Point(340 - 15, 195)
+        self.run_button.Font = self.run_button_font
+        self.run_button.Text = 'Start'
+        self.run_button.Click += self.run_button_click
+
+        # Add all components to controls
+        #       Draw on top
+        set_all_components(self, [
+        ])
+        
+        #       Draw below
+        set_all_components(self, [
+            self.task_label,
+            
+            self.open_path_entry,
+            self.save_path_entry,
+            
+            self.open_path_button,
+            self.save_path_button,
+            self.back_button,
+            self.run_button
+        ])
+    # endregion
+    
+    def run_command(self, progress):
+        self.running = True
+        print('Running command')
+        
+        tgfl.print_output = True
+        
+        try:
+            progress.Value = 1
+            self.task_label.Text = 'Loading logic'
+            layer, tgfl.all_nodes = parsers.read_logic(self.open_path, tgfl.Node) if path.splitext(self.open_path)[1].lower() == '.logic' else parsers.read_json(self.open_path, tgfl.Node)
+            
+            progress.Value += 1
+            self.task_label.Text = 'Finding inputs' # and outputs
+            tgfl.find_inputs_and_outputs()
+            
+            progress.Value += 1
+            self.task_label.Text = 'Creating table'
+            table = tgfl.make_input_table()
+            # print(table)
+            
+            progress.Value += 1
+            self.task_label.Text = 'Creating outputs table'
+            full_table = tgfl.run_input_table(table)
+            # print(full_table)
+            
+            progress.Value += 1
+            self.task_label.Text = 'Saving'
+            tgfl.save_table(self.save_path, full_table)
+            
+            progress.Value += 1
+            self.task_label.Text = 'Saved'
+            progress.Hide()
+        except MemoryError as me:
+            progress.Value = 0
+            progress.Hide()
+            self.task_label.Text = 'MemoryError'
+        
+        self.back_button.Enabled = True
+        self.run_button.Enabled = True
+        self.open_path_button.Enabled = True
+        self.save_path_button.Enabled = True
+        
+        self.running = False
+        
+    # Components's events
+    # region events
+    def run_button_click(self, sender, args):
+        if len(self.open_path) > 0 and len(self.save_path):
+            self.open_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+            self.save_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+            
+            self.progress = ProgressBar()
+            self.progress.Size = Size(435, 25)
+            self.progress.Location = Point(15, 192 - 25 - 5)
+            self.progress.Maximum = 6
+            self.progress.BackColor = Color.FromArgb(69, 73, 74)
+            self.Controls.Add(self.progress)
+            
+            # self.back_button.Enabled = False
+            self.run_button.Enabled = False
+            self.open_path_button.Enabled = False
+            self.save_path_button.Enabled = False
+            
+            self.t = threading.Thread(target=self.run_command, args=(self.progress,))
+            self.t.start()
+        elif len(self.open_path) <= 0 and len(self.save_path) <= 0:
+            self.open_path_entry.BackColor = Color.Red
+            self.save_path_entry.BackColor = Color.Red
+        elif len(self.open_path) <= 0:
+            self.open_path_entry.BackColor = Color.Red
+            self.save_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+        elif len(self.save_path) <= 0:
+            self.save_path_entry.BackColor = Color.Red
+            self.open_path_entry.BackColor = Color.FromArgb(69, 73, 74)
+            
+    
+    def open_path_button_click(self, sender, args):
+        if self.open_file_dialog.ShowDialog() == WinForms.DialogResult.OK:
+            try:
+                self.open_path = self.open_file_dialog.FileName
+                self.use_json = False if path.splitext(self.open_path)[1] == '.logic' else True
+                self.open_path_entry.Text = self.open_path
+            except SecurityException as se:
+                WinForms.MessageBox.Show(f'Security error.\n\nError message: {se.Message}\n\nDetails:\n\n{se.StackTrace}')
+                
+    
+    def save_path_button_click(self, sender, args):
+        if self.save_file_dialog.ShowDialog() == WinForms.DialogResult.OK:
+            try:
+                self.save_path = self.save_file_dialog.FileName
+                self.save_path_entry.Text = self.save_path
+            except SecurityException as se:
+                WinForms.MessageBox.Show(f'Security error.\n\nError message: {se.Message}\n\nDetails:\n\n{se.StackTrace}')
+             
+                
+    def back_button_click(self, sender, args):
+        if self.running:
+            ctype_async_raise(self.t, MemoryError)
+            self.progress.Hide()
+            self.progress = None
+            self.running = False
+            self.t = None
+            return
+            
+        print('Pressed back')
+        position = self.Location
+        self.Hide()
+        mform = main_form()
+        mform.FormClosed += lambda sender, args: self.Close()
+        mform.Show()
+        mform.SetDesktopLocation(position.X, position.Y)
+    # endregion
 
 def main_form_thread():
     mform = main_form()

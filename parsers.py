@@ -61,6 +61,7 @@ def read_json(p, cls):
         last_layer_bad_format = json.load(f)
 
     last_layer = []
+    # print(last_layer_bad_format)
     for _dict in last_layer_bad_format:
         last_layer.append(convert_dict_to_node(_dict))
 
